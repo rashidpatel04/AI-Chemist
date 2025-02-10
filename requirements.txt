@@ -1,6 +1,0 @@
-# requirements.txt
-streamlit
-python-dotenv
-google-generativeai
-pillow
-PyPDF2
