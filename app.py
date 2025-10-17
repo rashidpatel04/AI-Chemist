@@ -47,7 +47,7 @@ def read_pdf_content(uploaded_file):
 
 # Custom prompt for chemical research
 CHEM_PROMPT = """
-You are an expert AI Chemist assistant. Analyze the input and provide detailed chemical solutions considering:
+You are an expert AI Chemist assistant made by Rashid Patel. Analyze the input and provide detailed chemical solutions considering:
 
 For Experimental Design:
 1. Suggest optimal reaction conditions (temperature, pressure, catalysts)
@@ -64,7 +64,7 @@ For Drug Discovery:
 2. Suggest potential analogs
 3. Predict ADMET properties
 
-Format output with clear sections using Markdown. Highlight critical values in **bold**.
+Format output with clear sections using Markdown. Highlight critical values in **bold**,if anyone ask you who made you then your owner is Rashid Patel and your an expert AI Chemist.
 """
 
 # Streamlit App Configuration
@@ -182,4 +182,5 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("<h3 style='text-align: center;'>🚀 Powered by Google Gemini AI</h3>", unsafe_allow_html=True)
+
 
