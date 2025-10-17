@@ -13,7 +13,7 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Initialize Gemini Pro 1.5 model
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 
 def get_gemini_response(input_text, pdf_content=None, image=None):
@@ -182,3 +182,4 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("<h3 style='text-align: center;'>🚀 Powered by Google Gemini AI</h3>", unsafe_allow_html=True)
+
