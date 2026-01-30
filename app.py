@@ -10,23 +10,32 @@ from PyPDF2 import PdfReader
 load_dotenv()
 
 # Configure Google API Key
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+# Make sure your .env file has GOOGLE_API_KEY
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    st.error("API Key not found. Please check your .env file.")
+else:
+    genai.configure(api_key=api_key)
 
-# Initialize Gemini Pro 1.5 model
-model = genai.GenerativeModel('Gemini 2.5 Flash-Lite')
-
+# Initialize Gemini Model
+# CHANGE MADE HERE: Used the correct, valid model ID for free tier
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 def get_gemini_response(input_text, pdf_content=None, image=None):
     """Get response from Gemini model based on input type"""
-    if image:
-        response = model.generate_content([input_text, image])
-    elif pdf_content:
-        combined_input = f"{input_text}\n\nReference Document Content:\n{pdf_content}"
-        response = model.generate_content(combined_input)
-    else:
-        response = model.generate_content(input_text)
-    return response.text
-
+    # Create the content list correctly based on input
+    try:
+        if image:
+            # For images, we pass the text prompt and the image object
+            response = model.generate_content([input_text, image])
+        elif pdf_content:
+            combined_input = f"{input_text}\n\nReference Document Content:\n{pdf_content}"
+            response = model.generate_content(combined_input)
+        else:
+            response = model.generate_content(input_text)
+        return response.text
+    except Exception as e:
+        return f"Error generating response: {e}"
 
 def input_image_setup(uploaded_file):
     """Process uploaded image file"""
@@ -35,7 +44,6 @@ def input_image_setup(uploaded_file):
     else:
         raise FileNotFoundError("No file uploaded")
 
-
 def read_pdf_content(uploaded_file):
     """Extract text from PDF file"""
     pdf_reader = PdfReader(uploaded_file)
@@ -43,7 +51,6 @@ def read_pdf_content(uploaded_file):
     for page in pdf_reader.pages:
         text += page.extract_text() or ""
     return text
-
 
 # Custom prompt for chemical research
 CHEM_PROMPT = """
@@ -64,7 +71,7 @@ For Drug Discovery:
 2. Suggest potential analogs
 3. Predict ADMET properties
 
-Format output with clear sections using Markdown. Highlight critical values in **bold**,if anyone ask you who made you then your owner is Rashid Patel and your an expert AI Chemist.
+Format output with clear sections using Markdown. Highlight critical values in **bold**, if anyone ask you who made you then your owner is Rashid Patel and your an expert AI Chemist.
 """
 
 # Streamlit App Configuration
@@ -113,7 +120,11 @@ st.markdown("---")
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.image("AIC.png", width=200)
+    # Note: Make sure AIC.png exists in your folder or this will show a broken image placeholder
+    if os.path.exists("AIC.png"):
+        st.image("AIC.png", width=200)
+    else:
+        st.write("Chemistry Icon") # Fallback if image is missing
 
 with col2:
     input_type = st.radio("Select Input Type:", ["Text", "Image", "PDF"], horizontal=True)
@@ -138,27 +149,38 @@ elif input_type == "PDF":
 # Additional Parameters
 with st.expander("⚙️ Advanced Settings"):
     temp = st.slider("Model Creativity (Temperature):", 0.0, 1.0, 0.7)
+    # Note: Using generation_config is better for passing these parameters
     max_tokens = st.number_input("Max Response Length (Tokens):", 100, 2000, 500)
 
 # Process Input
 if st.button("🔬 Generate Solution", use_container_width=True):
-    with st.spinner("🧪 Analyzing chemical problem..."):
-        try:
-            full_prompt = f"{CHEM_PROMPT}\n\nUser Input: {user_input}"
+    if not user_input and not image and not pdf_content:
+         st.warning("Please provide some input (Text, Image, or PDF).")
+    else:
+        with st.spinner("🧪 Analyzing chemical problem..."):
+            try:
+                full_prompt = f"{CHEM_PROMPT}\n\nUser Input: {user_input}"
+                
+                # Configure generation settings
+                generation_config = genai.types.GenerationConfig(
+                    temperature=temp,
+                    max_output_tokens=max_tokens
+                )
 
-            if input_type == "Image":
-                response = get_gemini_response(full_prompt, image=image)
-            elif input_type == "PDF":
-                response = get_gemini_response(full_prompt, pdf_content=pdf_content)
-            else:
-                response = get_gemini_response(full_prompt)
+                if input_type == "Image" and image:
+                    response = model.generate_content([full_prompt, image], generation_config=generation_config)
+                elif input_type == "PDF" and pdf_content:
+                    combined_input = f"{full_prompt}\n\nReference Document Content:\n{pdf_content}"
+                    response = model.generate_content(combined_input, generation_config=generation_config)
+                else:
+                    response = model.generate_content(full_prompt, generation_config=generation_config)
 
-            st.snow()  # ❄️ Cool snow effect for result display
-            st.markdown("<h2 style='color: #e74c3c;'>🧪 AI Chemist's Solution</h2>", unsafe_allow_html=True)
-            st.markdown(response)
+                st.snow()  # ❄️ Cool snow effect for result display
+                st.markdown("<h2 style='color: #e74c3c;'>🧪 AI Chemist's Solution</h2>", unsafe_allow_html=True)
+                st.markdown(response.text)
 
-        except Exception as e:
-            st.error(f"⚠️ Error: {str(e)}")
+            except Exception as e:
+                st.error(f"⚠️ Error: {str(e)}")
 
 # Sidebar Information
 with st.sidebar:
@@ -182,6 +204,3 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("<h3 style='text-align: center;'>🚀 Powered by Google Gemini AI</h3>", unsafe_allow_html=True)
-
-
-
