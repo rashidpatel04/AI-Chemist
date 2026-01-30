@@ -19,7 +19,7 @@ else:
 
 # Initialize Gemini Model
 # CHANGE MADE HERE: Used the correct, valid model ID for free tier
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 def get_gemini_response(input_text, pdf_content=None, image=None):
     """Get response from Gemini model based on input type"""
@@ -204,3 +204,4 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("<h3 style='text-align: center;'>🚀 Powered by Google Gemini AI</h3>", unsafe_allow_html=True)
+
